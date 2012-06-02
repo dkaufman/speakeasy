@@ -7,7 +7,9 @@ gem 'rails', '3.2.3'
 
 gem 'sqlite3'
 
-
+group :development, :test do
+  gem 'rspec-rails'
+end
 # Gems used only for assets and not required
 # in production environments by default.
 group :assets do
@@ -26,7 +28,7 @@ gem 'jquery-rails'
 # gem 'bcrypt-ruby', '~> 3.0.0'
 
 # To use Jbuilder templates for JSON
-# gem 'jbuilder'
+gem 'jbuilder'
 
 # Use unicorn as the app server
 # gem 'unicorn'
