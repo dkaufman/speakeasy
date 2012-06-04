@@ -11,6 +11,7 @@ group :development, :test do
   gem 'rspec-rails'
   gem "rack-test", require: "rack/test"
   gem "factory_girl"
+  gem 'guard-rspec'
 end
 
 # Gems used only for assets and not required

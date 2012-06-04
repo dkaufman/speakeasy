@@ -4,11 +4,11 @@ describe "Messages" do
   let!(:room) { FactoryGirl.create(:room_with_messages) }
   let!(:url) { "/messages" }
   describe "get /messages" do
+    before(:each) { get "#{url}.json", params }
     context "messages viewable by this room" do
-      let!(:empty_room) { FactoryGirl.create(:room) }
-      context "the request has a valid room id in the header" do
+      context "the request has a valid room id in the body" do
         context "the room has messages" do
-          before(:each) { get "#{url}.json", nil, {'room_id' => room.id} }
+          let!(:params) { {:room_id => room.id} }
           it "returns a json with the room's messages" do
             messages_json = room.messages.to_json(only: :body)
             response.body.should == messages_json
@@ -18,7 +18,8 @@ describe "Messages" do
           end
         end
         context "the room has no messages" do
-          before(:each) { get "#{url}.json", nil, {'room_id' => empty_room.id} }
+          let!(:empty_room) { FactoryGirl.create(:room) }
+          let!(:params) { {:room_id => empty_room.id} }
           it "returns an empty json" do
             response.body.should == "[]"
           end
@@ -28,7 +29,7 @@ describe "Messages" do
         end
       end
       context "the request has a non-existent room id in the header" do
-        before(:each) { get "#{url}.json", nil, {'room_id' => 99} }
+        let!(:params) { {:room_id => 9999} }
         it "returns an invalid room response" do
           response.body.should == "Invalid Room"
         end
@@ -37,7 +38,7 @@ describe "Messages" do
         end
       end
       context "the request has no room id in the header" do
-        before(:each) { get "#{url}.json" }
+        let!(:params) {}
         it "returns a 400 response" do
         response.status.should == 400
         end
@@ -47,12 +48,10 @@ describe "Messages" do
 
   describe "post /messages" do
     let!(:message_count) { Message.count }
+    before(:each) { post "#{url}.json", params }
     context "with valid request body" do
+      let!(:params) { {body: "Boom", room_id: room.id} }
       before(:each) do
-        post "#{url}.json", body: {
-          body: "Boom",
-          room_id: room.id
-        }
       end
       it "creates the message" do
         Message.last.body.should == "Boom"
@@ -63,11 +62,7 @@ describe "Messages" do
       end
     end
     context "without room id" do
-      before(:each) do
-        post "#{url}.json", body: {
-          body: "Boom",
-        }
-      end
+      let!(:params) { {body: "Boom"} }
       it "does not create a room" do
         Message.count.should == message_count
       end
@@ -76,12 +71,17 @@ describe "Messages" do
       end
     end
     context "without message body" do
-      before(:each) do
-        post "#{url}.json", body: {
-          room_id: room.id
-        }
+      let!(:params) { {room_id: room.id} }
+      it "does not create a message" do
+        Message.count.should == message_count
       end
-      it "does not create a room" do
+      it "returns a 400 response" do
+        response.status.should == 400
+      end
+    end
+    context "with a non-existent room" do
+      let!(:params) { {body: "Boom", room_id: 999} }
+      it "does not create a message" do
         Message.count.should == message_count
       end
       it "returns a 400 response" do

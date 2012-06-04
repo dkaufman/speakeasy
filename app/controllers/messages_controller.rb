@@ -1,18 +1,24 @@
 class MessagesController < ApplicationController
   def index
-    room = Room.where(id: request.headers["room_id"]).first
+    room = Room.where(id: params["room_id"]).first
     if room
       @messages = room.messages
+    else
+      render status: :bad_request, json: "Invalid Room"
     end
-    render status: :bad_request, json: "Invalid Room" unless @messages
   end
 
   def create
-    message = Message.create(body: params["body"]["body"], room_id: params["body"]["room_id"])
-    if message.save
-      render status: :created, json: "Message Created"
+    room = Room.where(id: params["room_id"]).first
+    if room
+      message = room.messages.build(body: params["body"])
+      if message.save
+        render status: :created, json: "Message Created"
+      else
+        render status: :bad_request, json: "Bad Request"
+      end
     else
-      render status: :bad_request, json: "Bad Request"
+      render status: :bad_request, json: "Room does not exist"
     end
   end
 end
