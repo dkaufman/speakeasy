@@ -1,4 +1,3 @@
-json.messages @messages do |json, message|
-  json.id message.id
+json.array! @messages do |json, message|
   json.body message.body
 end
