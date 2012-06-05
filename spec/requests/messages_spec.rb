@@ -51,8 +51,6 @@ describe "Messages" do
     before(:each) { post "#{url}.json", params }
     context "with valid request body" do
       let!(:params) { {body: "Boom", room_id: room.id} }
-      before(:each) do
-      end
       it "creates the message" do
         Message.last.body.should == "Boom"
         Message.count.should == message_count + 1
