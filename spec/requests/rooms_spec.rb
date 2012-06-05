@@ -6,8 +6,8 @@ describe "Rooms" do
     let!(:url) { "/rooms" }
     before(:each) { get "#{url}.json" }
     it "returns a successful json response of all rooms" do
-      response.body.should include { room.name }
-      response.body.should include { room.description }
+      response.body.should include(room.name)
+      response.body.should include(room.description)
       response.status.should == 200
     end
   end
