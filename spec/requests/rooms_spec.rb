@@ -113,7 +113,7 @@ describe "Rooms" do
       it "destroys the room" do
         Room.find_by_id(room.id).should be_nil
       end
-      
+
       it "returns a 200 status" do
         response.status.should == 200
       end
