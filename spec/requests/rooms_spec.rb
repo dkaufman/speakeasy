@@ -1,36 +1,45 @@
 require 'spec_helper'
 
 describe "Rooms" do
-  describe "get /rooms" do
-    let!(:room) { FactoryGirl.create(:room) }
-    let!(:url) { "/rooms" }
-    before(:each) { get "#{url}.json" }
+  let!(:room) { FactoryGirl.create(:room) }
+
+  describe "#index" do
+    before(:each) { get rooms_url(:format => :json) }
     it "returns a successful json response of all rooms" do
-      response.body.should include(room.name)
-      response.body.should include(room.description)
+      response_room = JSON.parse(response.body).first
+      response_room.values.should include(room.name)
+      response_room.values.should include(room.description)
+    end
+
+    it "returns a 200 response" do
       response.status.should == 200
     end
   end
 
-  describe "post /rooms" do
-    let!(:url) { "/rooms" }
+  describe "#create" do
     let!(:room_count) { Room.count }
-    before(:each) { post "#{url}.json", params.to_json }
+    before(:each) { post rooms_url(:format => :json), params }
     context "with a complete, valid request body" do
-      let!(:params) { {name: "Hungry Academy", description: "Boom"} }
-      it "creates a room with a 201 response" do
+      let(:params) { {:room => {name: "Hungry Academy", description: "Boom"}} }
+      it "creates a room" do
         Room.last.name.should == "Hungry Academy"
         Room.last.description.should == "Boom"
         Room.count.should == room_count + 1
+      end
+
+      it "returns a 201 response" do
         response.status.should == 201
       end
     end
     context "with a partial, valid request body" do
-      let!(:params) { {name: "Hungry Academy", } }
+      let!(:params) { {:room => {name: "Hungry Academy"}} }
       it "creates a room with a 201 response" do
         Room.last.name.should == "Hungry Academy"
         Room.last.description.should be_nil
         Room.count.should == room_count + 1
+      end
+
+      it "returns a 201 response" do
         response.status.should == 201
       end
     end
@@ -38,63 +47,80 @@ describe "Rooms" do
       let!(:params) { {} }
       it "does not create a room" do
         Room.count.should == room_count
+      end
+
+      it "returns a 400 response" do
         response.status.should == 400
       end
     end
   end
 
-  describe "put /rooms/:id" do
-    let!(:url) { "/rooms/#{room_id}" }
-    let!(:room) { FactoryGirl.create(:room) }
-    before(:each) { put "#{url}.json", params.to_json }
+  describe "#update" do
+    before(:each) { put room_url(room.id), params }
+
     context "with an existing room id" do
-      let!(:room_id) { room.id }
+      let!(:room) { FactoryGirl.create(:room) }
+
       context "with full valid request body" do
-        let!(:params) { {name: "Hungry", description: "Academy"} }
+        let!(:params) { {:room => {name: "Hungry", description: "Academy"}} }
         it "should update the room information" do
-          Room.find(room_id).name.should == "Hungry"
-          Room.find(room_id).description.should == "Academy"
+          Room.find(room.id).name.should == "Hungry"
+          Room.find(room.id).description.should == "Academy"
+        end
+        it "should return a 200 response" do
           response.status.should == 200
         end
       end
+
       context "with a partial valid request body" do
-        let!(:params) { {name: "Hungry"} }
+        let!(:params) { {:room => {name: "Hungry"}} }
+
         it "should update only the provided room information" do
-          Room.find(room_id).name.should == "Hungry"
-          Room.find(room_id).description.should_not be_nil
+          Room.find(room.id).name.should == "Hungry"
+          Room.find(room.id).description.should_not be_nil
+        end
+        it "should return a 200 response" do
           response.status.should == 200
         end
       end
+
       context "with an invalid request body" do
-        let!(:params) { {name: ""} }
+        let!(:params) { {:room => {name: ""}} }
+
         it "should not update the room information" do
-          Room.find(room_id).name.should_not == "Hungry"
+          Room.find(room.id).name.should_not == "Hungry"
+        end
+
+        it "should return a 400 response" do
           response.status.should == 400
         end
       end
     end
     context "with a non-existent room id" do
-      let!(:room_id) { 9999}
-      let!(:params) { {name: "Hungry"} }
-      it "returns a 400 error" do
-        response.status.should == 400
+      let!(:room) { double(:id => 9999)}
+      let!(:params) { {:room => {name: "Hungry"}} }
+
+      it "returns a 404 error" do
+        response.status.should == 404
       end
     end
   end
 
-  describe "delete /rooms/:id" do
-    let!(:url) { "/rooms/#{room_id}" }
+  describe "#destroy" do
     let!(:room) { FactoryGirl.create(:room) }
-    before(:each) { delete "#{url}.json" }
+    before(:each) { delete room_path(room) }
     context "with an existing room id" do
-      let!(:room_id) { room.id }
       it "destroys the room" do
         Room.find_by_id(room.id).should be_nil
+      end
+      
+      it "returns a 200 status" do
         response.status.should == 200
       end
     end
     context "with a non-existent room id" do
-      let!(:room_id) { 9999 }
+      let!(:room) { double(:id => 9999) }
+
       it "returns a 400 error" do
         response.status.should == 400
       end

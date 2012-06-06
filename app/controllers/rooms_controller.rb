@@ -4,34 +4,34 @@ class RoomsController < ApplicationController
   end
 
   def create
-    room = Room.new(JSON.parse(request.body.read))
+    room = Room.new(params[:room])
     if room.save
-      render status: :created, json: "Room Created"
+      head status: :created, :location => [room]
     else
-      render status: :bad_request, json: "Bad Request"
+      head status: :bad_request
     end
   end
 
   def update
-    room = Room.where(id: params["id"]).first
+    room = Room.find_by_id(params[:id])
     if room
-      if room.update_attributes(JSON.parse(request.body.read))
-        render status: :ok, json: "Room Updated"
+      if room.update_attributes(params[:room])
+        head status: :ok, :location => [room]
       else
-        render status: :bad_request, json: "Bad Request"
+        head status: :bad_request
       end
     else
-      render status: :bad_request, json: "Bad Request"
+      head status: :not_found
     end
   end
-  
+
   def destroy
-    room = Room.where(id: params["id"]).first
+    room = Room.find_by_id(params[:id])
     if room
       room.destroy
-      render status: :ok, json: "Room Destroyed"
+      head status: :ok
     else
-      render status: :bad_request, json: "Bad Request"
+      head status: :bad_request
     end
   end
 end
